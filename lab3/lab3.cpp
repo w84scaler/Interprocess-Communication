@@ -8,10 +8,14 @@
 #define SHARED_MEMORY_NAME TEXT("BRUH_MEMORY")
 #define N 3
 
+LPCTSTR InitializeMapping(HANDLE* mapping, size_t size, LPCWSTR name);
+void freeResources(HANDLE* mapping, LPCTSTR* buff, CRITICAL_SECTION* section);
+
 int main()
 {
     size_t SectionSize = sizeof(CRITICAL_SECTION);
     size_t MemorySize = sizeof(int);
+
     int sto = 100;
 
     LPCTSTR csBuffer, smBuffer;
@@ -23,8 +27,7 @@ int main()
     STARTUPINFO si3 = { sizeof(STARTUPINFO) };
     STARTUPINFO startupInfo[] = { si1, si2, si3 };
 
-    PROCESS_INFORMATION pi1, pi2, pi3;
-    PROCESS_INFORMATION processInfo[] = { pi1, pi2, pi3 };
+    PROCESS_INFORMATION processInfo[N];
 
     std::wstring CmdLine1(L"Process1.exe");
     std::wstring CmdLine2(L"Process2.exe");
@@ -51,7 +54,7 @@ int main()
     CopyMemory((PVOID)csBuffer, &cs, SectionSize);
     CopyMemory((PVOID)smBuffer, &sto, MemorySize);
 
-    for (int i = 1;i <= 3;i++) {
+    for (int i = 0; i < 3; i++) {
         BOOL res = CreateProcess(NULL, lpwCmdLines[i], NULL, NULL, FALSE, 0, NULL, NULL, &startupInfo[i], &processInfo[i]);
         if (!res) {
             freeResources(&smMapping, &smBuffer, NULL);
@@ -60,7 +63,7 @@ int main()
         }
     }
 
-    for (int i = 1;i <= 3;i++) {
+    for (int i = 0;i < 3;i++) {
         WaitForSingleObject(processInfo[i].hProcess, INFINITE);
         CloseHandle(processInfo[i].hThread);
         CloseHandle(processInfo[i].hProcess);
